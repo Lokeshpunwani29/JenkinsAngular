@@ -1,0 +1,59 @@
+pipeline {
+    agent any
+
+    tools {
+        nodejs 'node2217'
+    }
+
+    environment {
+        APP_NAME = "angular-app"
+        IMAGE_NAME = "angular-app-image"
+    }
+
+    stages {
+
+        stage('Checkout Code') {
+            steps {
+                git branch: 'main',
+                    url: 'https://github.com/Lokeshpunwani29/JenkinsAngular'
+            }
+        }
+
+        stage('Install Dependencies') {
+            steps {
+                bat 'npm install'
+            }
+        }
+
+        stage('Build Angular App') {
+            steps {
+                bat 'npm run build'
+            }
+        }
+
+        stage('Docker Build') {
+            steps {
+                bat 'docker build -t %IMAGE_NAME% .'
+            }
+        }
+
+        stage('Run Docker Container') {
+            steps {
+                bat '''
+                docker stop %APP_NAME% || exit 0
+                docker rm %APP_NAME% || exit 0
+                docker run -d -p 8081:80 --name %APP_NAME% %IMAGE_NAME%
+                '''
+            }
+        }
+    }
+
+    post {
+        success {
+            echo 'Angular application deployed successfully 🚀'
+        }
+        failure {
+            echo 'Build failed ❌'
+        }
+    }
+}
