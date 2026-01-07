@@ -2,12 +2,13 @@ pipeline {
     agent any
 
     tools {
+        // Use the NodeJS tool you configured in Jenkins
         nodejs 'node2217'
     }
 
     environment {
-        APP_NAME = "angular-app"
-        IMAGE_NAME = "angular-app-image"
+        APP_NAME   = "jenkins-angular"
+        IMAGE_NAME = "jenkins-angular-image"
     }
 
     stages {
@@ -39,11 +40,14 @@ pipeline {
 
         stage('Run Docker Container') {
             steps {
-                bat '''
-                docker stop %APP_NAME% || exit 0
-                docker rm %APP_NAME% || exit 0
-                docker run -d -p 8081:80 --name %APP_NAME% %IMAGE_NAME%
-                '''
+                // Stop old container if exists
+                bat 'docker stop %APP_NAME% || exit 0'
+
+                // Remove old container if exists
+                bat 'docker rm %APP_NAME% || exit 0'
+
+                // Run new container
+                bat 'docker run -d -p 8081:80 --name %APP_NAME% %IMAGE_NAME%'
             }
         }
     }
@@ -51,9 +55,10 @@ pipeline {
     post {
         success {
             echo 'Angular application deployed successfully 🚀'
+            echo 'Access it at: http://localhost:8081'
         }
         failure {
-            echo 'Build failed ❌'
+            echo 'Build or deployment failed ❌'
         }
     }
 }
